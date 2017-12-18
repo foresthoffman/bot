@@ -1,0 +1,6 @@
+# exclude binaries
+twitchbot
+*.json
+
+# confidential
+private/
