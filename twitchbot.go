@@ -96,6 +96,13 @@ func (bb *BasicBot) Connect() {
 	bb.startTime = time.Now()
 }
 
+// Officially disconnects the bot from the Twitch IRC server.
+func (bb *BasicBot) Disconnect() {
+	bb.conn.Close()
+	upTime := time.Now().Sub(bb.startTime).Seconds()
+	fmt.Printf("[%s] Closed connection from %s! | Live for: %fs\n", timeStamp(), bb.Server, upTime)
+}
+
 func timeStamp() string {
 	return TimeStamp(PSTFormat)
 }
