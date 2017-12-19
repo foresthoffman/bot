@@ -14,19 +14,22 @@ Basic usage:
 ```
 package main
 
-import "github.com/foresthoffman/twitchbot"
+import (
+	"github.com/foresthoffman/twitchbot"
+	"time"
+)
 
 func main() {
 
 	// Replace the channel name, bot name, and the path to the private directory with your respective
 	// values.
-	myBot := twitchbot.TwitchBot{
-		Channel:      "twitch",
-		MsgRate:      time.Duration(20/30) * time.Millisecond,
-		Name:         "TwitchBot",
-		Port:         "6667",
-		PrivatePath:  "./private",
-		Server:       "irc.chat.twitch.tv",
+	myBot := twitchbot.BasicBot{
+		Channel:     "twitch",
+		MsgRate:     time.Duration(20/30) * time.Millisecond,
+		Name:        "TwitchBot",
+		Port:        "6667",
+		PrivatePath: "../private/oauth.json",
+		Server:      "irc.chat.twitch.tv",
 	}
 	myBot.Start()
 }

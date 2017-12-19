@@ -51,7 +51,7 @@ type OAuthCred struct {
 
 	// The bot account's OAuth password. Thanks to the JSON syntax after the data type, this field
 	// will be filled with the value of the field with the specified key.
-	Password string `json:"password",omitempty`
+	Password string `json:"password,omitempty"`
 }
 
 type TwitchBot interface {
@@ -59,7 +59,7 @@ type TwitchBot interface {
 	Disconnect()
 	HandleChat() error
 	JoinChannel()
-	ReadCredentials() (*OAuthCred, error)
+	ReadCredentials() error
 	Say(msg string) error
 	Start()
 }
@@ -213,6 +213,8 @@ func (bb *BasicBot) ReadCredentials() error {
 		return err
 	}
 
+	bb.Credentials = &OAuthCred{}
+
 	// parses the file contents
 	dec := json.NewDecoder(strings.NewReader(string(credFile)))
 	if err = dec.Decode(bb.Credentials); nil != err && io.EOF != err {
@@ -238,17 +240,26 @@ func (bb *BasicBot) Say(msg string) error {
 // pre-specified channel, and then handle the chat. It will attempt to reconnect until it is told to
 // shut down, or is forcefully shutdown.
 func (bb *BasicBot) Start() {
-	bb.Connect()
-	bb.JoinChannel()
-	err := bb.HandleChat()
+	err := bb.ReadCredentials()
 	if nil != err {
-		time.Sleep(1000 * time.Millisecond)
 		fmt.Println(err)
-		fmt.Println("Starting bot again...")
-
-		// attempts to reconnect upon unexpected chat error
-		bb.Start()
+		fmt.Println("Aborting...")
 		return
+	}
+
+	for {
+		bb.Connect()
+		bb.JoinChannel()
+		err = bb.HandleChat()
+		if nil != err {
+
+			// attempts to reconnect upon unexpected chat error
+			time.Sleep(1000 * time.Millisecond)
+			fmt.Println(err)
+			fmt.Println("Starting bot again...")
+		} else {
+			return
+		}
 	}
 }
 
