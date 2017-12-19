@@ -12,6 +12,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	rgb "github.com/foresthoffman/rgblog"
 	"io"
 	"io/ioutil"
 	"net"
@@ -20,18 +21,6 @@ import (
 	"strings"
 	"time"
 )
-
-// TODO:
-// 1. Connect to a Twitch.tv Chat channel.
-// 	a. Pass along necessary information for the connection.
-// 	 i.   The IRC (chat) server.
-// 	 ii.  The port on the server.
-// 	 iii. The channel we want the bot to join.
-// 	 iv.  The bot's name.
-// 	 v.   A secure key to allow the bot to connect indirectly (not through the website).
-// 	 vi.  A maximum speed at which the bot can respond.
-// 2. Listen for messages in the chat.
-// 3. Do things based on what is happening in the chat.
 
 const PSTFormat = "Jan 2 15:04:05 PST"
 
@@ -103,16 +92,16 @@ type BasicBot struct {
 // succeeds or is forcefully shutdown.
 func (bb *BasicBot) Connect() {
 	var err error
-	fmt.Printf("[%s] Connecting to %s...\n", timeStamp(), bb.Server)
+	rgb.YPrintf("[%s] Connecting to %s...\n", timeStamp(), bb.Server)
 
 	// makes connection to Twitch IRC server
 	bb.conn, err = net.Dial("tcp", bb.Server+":"+bb.Port)
 	if nil != err {
-		fmt.Printf("[%s] Cannot connect to %s, retrying.\n", timeStamp(), bb.Server)
+		rgb.YPrintf("[%s] Cannot connect to %s, retrying.\n", timeStamp(), bb.Server)
 		bb.Connect()
 		return
 	}
-	fmt.Printf("[%s] Connected to %s!\n", timeStamp(), bb.Server)
+	rgb.YPrintf("[%s] Connected to %s!\n", timeStamp(), bb.Server)
 	bb.startTime = time.Now()
 }
 
@@ -120,13 +109,13 @@ func (bb *BasicBot) Connect() {
 func (bb *BasicBot) Disconnect() {
 	bb.conn.Close()
 	upTime := time.Now().Sub(bb.startTime).Seconds()
-	fmt.Printf("[%s] Closed connection from %s! | Live for: %fs\n", timeStamp(), bb.Server, upTime)
+	rgb.YPrintf("[%s] Closed connection from %s! | Live for: %fs\n", timeStamp(), bb.Server, upTime)
 }
 
 // Listens for and logs messages from chat. Responds to commands from the channel owner. The bot
 // continues until it gets disconnected, told to shutdown, or forcefully shutdown.
 func (bb *BasicBot) HandleChat() error {
-	fmt.Printf("[%s] Watching #%s...\n", timeStamp(), bb.Channel)
+	rgb.YPrintf("[%s] Watching #%s...\n", timeStamp(), bb.Channel)
 
 	// reads from connection
 	tp := textproto.NewReader(bufio.NewReader(bb.conn))
@@ -143,7 +132,7 @@ func (bb *BasicBot) HandleChat() error {
 		}
 
 		// logs the response from the IRC server
-		fmt.Printf("[%s] %s\n", timeStamp(), line)
+		rgb.YPrintf("[%s] %s\n", timeStamp(), line)
 
 		if "PING :tmi.twitch.tv" == line {
 
@@ -161,19 +150,18 @@ func (bb *BasicBot) HandleChat() error {
 				switch msgType {
 				case "PRIVMSG":
 					msg := matches[3]
-					fmt.Printf("[%s] %s: %s\n", timeStamp(), userName, msg)
+					rgb.GPrintf("[%s] %s: %s\n", timeStamp(), userName, msg)
 
 					// parse commands from user message
 					cmdMatches := cmdRegex.FindStringSubmatch(msg)
 					if nil != cmdMatches {
 						cmd := cmdMatches[1]
-						//arg := cmdMatches[2]
 
 						// channel-owner specific commands
 						if userName == bb.Channel {
 							switch cmd {
 							case "tbdown":
-								fmt.Printf(
+								rgb.CPrintf(
 									"[%s] Shutdown command received. Shutting down now...\n",
 									timeStamp(),
 								)
@@ -196,12 +184,12 @@ func (bb *BasicBot) HandleChat() error {
 
 // Makes the bot join its pre-specified channel.
 func (bb *BasicBot) JoinChannel() {
-	fmt.Printf("[%s] Joining #%s...\n", timeStamp(), bb.Channel)
+	rgb.YPrintf("[%s] Joining #%s...\n", timeStamp(), bb.Channel)
 	bb.conn.Write([]byte("PASS " + bb.Credentials.Password + "\r\n"))
 	bb.conn.Write([]byte("NICK " + bb.Name + "\r\n"))
 	bb.conn.Write([]byte("JOIN #" + bb.Channel + "\r\n"))
 
-	fmt.Printf("[%s] Joined #%s as @%s!\n", timeStamp(), bb.Channel, bb.Name)
+	rgb.YPrintf("[%s] Joined #%s as @%s!\n", timeStamp(), bb.Channel, bb.Name)
 }
 
 // Reads from the private credentials file and stores the data in the bot's Credentials field.
