@@ -222,6 +222,18 @@ func (bb *BasicBot) ReadCredentials() error {
 	return nil
 }
 
+// Makes the bot send a message to the chat channel.
+func (bb *BasicBot) Say(msg string) error {
+	if "" == msg {
+		return errors.New("BasicBot.Say: msg was empty.")
+	}
+	_, err := bb.conn.Write([]byte(fmt.Sprintf("PRIVMSG #%s %s\r\n", bb.Channel, msg)))
+	if nil != err {
+		return err
+	}
+	return nil
+}
+
 func timeStamp() string {
 	return TimeStamp(PSTFormat)
 }
