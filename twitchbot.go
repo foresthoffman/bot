@@ -234,6 +234,24 @@ func (bb *BasicBot) Say(msg string) error {
 	return nil
 }
 
+// Starts a loop where the bot will attempt to connect to the Twitch IRC server, then connect to the
+// pre-specified channel, and then handle the chat. It will attempt to reconnect until it is told to
+// shut down, or is forcefully shutdown.
+func (bb *BasicBot) Start() {
+	bb.Connect()
+	bb.JoinChannel()
+	err := bb.HandleChat()
+	if nil != err {
+		time.Sleep(1000 * time.Millisecond)
+		fmt.Println(err)
+		fmt.Println("Starting bot again...")
+
+		// attempts to reconnect upon unexpected chat error
+		bb.Start()
+		return
+	}
+}
+
 func timeStamp() string {
 	return TimeStamp(PSTFormat)
 }
