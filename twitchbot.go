@@ -9,11 +9,15 @@ package twitchbot
 
 import (
 	"bufio"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
+	"io/ioutil"
 	"net"
 	"net/textproto"
 	"regexp"
+	"strings"
 	"time"
 )
 
@@ -198,6 +202,24 @@ func (bb *BasicBot) JoinChannel() {
 	bb.conn.Write([]byte("JOIN #" + bb.Channel + "\r\n"))
 
 	fmt.Printf("[%s] Joined #%s as @%s!\n", timeStamp(), bb.Channel, bb.Name)
+}
+
+// Reads from the private credentials file and stores the data in the bot's Credentials field.
+func (bb *BasicBot) ReadCredentials() error {
+
+	// reads from the file
+	credFile, err := ioutil.ReadFile(bb.PrivatePath)
+	if nil != err {
+		return err
+	}
+
+	// parses the file contents
+	dec := json.NewDecoder(strings.NewReader(string(credFile)))
+	if err = dec.Decode(bb.Credentials); nil != err && io.EOF != err {
+		return err
+	}
+
+	return nil
 }
 
 func timeStamp() string {
