@@ -8,8 +8,12 @@
 package twitchbot
 
 import (
+	"bufio"
+	"errors"
 	"fmt"
 	"net"
+	"net/textproto"
+	"regexp"
 	"time"
 )
 
@@ -26,6 +30,18 @@ import (
 // 3. Do things based on what is happening in the chat.
 
 const PSTFormat = "Jan 2 15:04:05 PST"
+
+// Regex for parsing PRIVMSG strings.
+//
+// First matched group is the user's name and the second matched group is the content of the
+// user's message.
+var msgRegex *regexp.Regexp = regexp.MustCompile(`^:(\w+)!\w+@\w+\.tmi\.twitch\.tv (PRIVMSG) #\w+(?: :(.*))?$`)
+
+// Regex for parsing user commands, from already parsed PRIVMSG strings.
+//
+// First matched group is the command name and the second matched group is the argument for the
+// command.
+var cmdRegex *regexp.Regexp = regexp.MustCompile(`^!(\w+)\s?(\w+)?`)
 
 type OAuthCred struct {
 
@@ -80,7 +96,7 @@ type BasicBot struct {
 }
 
 // Connects the bot to the Twitch IRC server. The bot will continue to try to connect until it
-// succeeds or is manually shutdown.
+// succeeds or is forcefully shutdown.
 func (bb *BasicBot) Connect() {
 	var err error
 	fmt.Printf("[%s] Connecting to %s...\n", timeStamp(), bb.Server)
@@ -101,6 +117,77 @@ func (bb *BasicBot) Disconnect() {
 	bb.conn.Close()
 	upTime := time.Now().Sub(bb.startTime).Seconds()
 	fmt.Printf("[%s] Closed connection from %s! | Live for: %fs\n", timeStamp(), bb.Server, upTime)
+}
+
+// Listens for and logs messages from chat. Responds to commands from the channel owner. The bot
+// continues until it gets disconnected, told to shutdown, or forcefully shutdown.
+func (bb *BasicBot) HandleChat() error {
+	fmt.Printf("[%s] Watching #%s...\n", timeStamp(), bb.Channel)
+
+	// reads from connection
+	tp := textproto.NewReader(bufio.NewReader(bb.conn))
+
+	// listens for chat messages
+	for {
+		line, err := tp.ReadLine()
+		if nil != err {
+
+			// officially disconnects the bot from the server
+			bb.Disconnect()
+
+			return errors.New("bb.Bot.HandleChat: Failed to read line from channel. Disconnected.")
+		}
+
+		// logs the response from the IRC server
+		fmt.Printf("[%s] %s\n", timeStamp(), line)
+
+		if "PING :tmi.twitch.tv" == line {
+
+			// respond to PING message with a PONG message, to maintain the connection
+			bb.conn.Write([]byte("PONG :tmi.twitch.tv\r\n"))
+			continue
+		} else {
+
+			// handle a PRIVMSG message
+			matches := msgRegex.FindStringSubmatch(line)
+			if nil != matches {
+				userName := matches[1]
+				msgType := matches[2]
+
+				switch msgType {
+				case "PRIVMSG":
+					msg := matches[3]
+					fmt.Printf("[%s] %s: %s\n", timeStamp(), userName, msg)
+
+					// parse commands from user message
+					cmdMatches := cmdRegex.FindStringSubmatch(msg)
+					if nil != cmdMatches {
+						cmd := cmdMatches[1]
+						//arg := cmdMatches[2]
+
+						// channel-owner specific commands
+						if userName == bb.Channel {
+							switch cmd {
+							case "tbdown":
+								fmt.Printf(
+									"[%s] Shutdown command received. Shutting down now...\n",
+									timeStamp(),
+								)
+
+								bb.Disconnect()
+								return nil
+							default:
+								// do nothing
+							}
+						}
+					}
+				default:
+					// do nothing
+				}
+			}
+		}
+		time.Sleep(bb.MsgRate)
+	}
 }
 
 func timeStamp() string {
