@@ -44,12 +44,26 @@ type OAuthCred struct {
 }
 
 type TwitchBot interface {
+
+	// Opens a connection to the Twitch.tv IRC chat server.
 	Connect()
+
+	// Closes a connection to the Twitch.tv IRC chat server.
 	Disconnect()
+
+	// Listens to chat messages and PING request from the IRC server.
 	HandleChat() error
+
+	// Joins a specific chat channel.
 	JoinChannel()
+
+	// Parses credentials needed for authentication.
 	ReadCredentials() error
+
+	// Sends a message to the connected channel.
 	Say(msg string) error
+
+	// Attempts to keep the bot connected and handling chat.
 	Start()
 }
 
