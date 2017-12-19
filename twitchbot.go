@@ -23,7 +23,21 @@ import (
 // 2. Listen for messages in the chat.
 // 3. Do things based on what is happening in the chat.
 
+type OAuthCred struct {
+
+	// The bot account's OAuth password. Thanks to the JSON syntax after the data type, this field
+	// will be filled with the value of the field with the specified key.
+	Password string `json:"password",omitempty`
+}
+
 type TwitchBot interface {
+	Connect()
+	Disconnect()
+	HandleChat() error
+	JoinChannel()
+	ReadCredentials() (*OAuthCred, error)
+	Say(msg string) error
+	Start()
 }
 
 type BasicBot struct {
@@ -31,6 +45,9 @@ type BasicBot struct {
 	// The channel that the bot is supposed to join. Note: The name MUST be lowercase, regardless
 	// of how the username is displayed on Twitch.tv.
 	Channel string
+
+	// The credentials necessary for authentication.
+	Credentials *OAuthCred
 
 	// A forced delay between bot responses. This prevents the bot from breaking the message limit
 	// rules. A 20/30 millisecond delay is enough for a non-modded bot. If you decrease the delay
@@ -51,3 +68,4 @@ type BasicBot struct {
 	// The domain of the IRC server.
 	Server string
 }
+
