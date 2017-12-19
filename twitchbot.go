@@ -8,6 +8,8 @@
 package twitchbot
 
 import (
+	"fmt"
+	"net"
 	"time"
 )
 
@@ -22,6 +24,8 @@ import (
 // 	 vi.  A maximum speed at which the bot can respond.
 // 2. Listen for messages in the chat.
 // 3. Do things based on what is happening in the chat.
+
+const PSTFormat = "Jan 2 15:04:05 PST"
 
 type OAuthCred struct {
 
@@ -46,6 +50,9 @@ type BasicBot struct {
 	// of how the username is displayed on Twitch.tv.
 	Channel string
 
+	// A reference to the bot's connection to the server.
+	conn net.Conn
+
 	// The credentials necessary for authentication.
 	Credentials *OAuthCred
 
@@ -67,5 +74,32 @@ type BasicBot struct {
 
 	// The domain of the IRC server.
 	Server string
+
+	// The time at which the bot achieved a connection to the server.
+	startTime time.Time
 }
 
+// Connects the bot to the Twitch IRC server. The bot will continue to try to connect until it
+// succeeds or is manually shutdown.
+func (bb *BasicBot) Connect() {
+	var err error
+	fmt.Printf("[%s] Connecting to %s...\n", timeStamp(), bb.Server)
+
+	// makes connection to Twitch IRC server
+	bb.conn, err = net.Dial("tcp", bb.Server+":"+bb.Port)
+	if nil != err {
+		fmt.Printf("[%s] Cannot connect to %s, retrying.\n", timeStamp(), bb.Server)
+		bb.Connect()
+		return
+	}
+	fmt.Printf("[%s] Connected to %s!\n", timeStamp(), bb.Server)
+	bb.startTime = time.Now()
+}
+
+func timeStamp() string {
+	return TimeStamp(PSTFormat)
+}
+
+func TimeStamp(format string) string {
+	return time.Now().Format(format)
+}
