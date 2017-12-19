@@ -190,6 +190,16 @@ func (bb *BasicBot) HandleChat() error {
 	}
 }
 
+// Makes the bot join its pre-specified channel.
+func (bb *BasicBot) JoinChannel() {
+	fmt.Printf("[%s] Joining #%s...\n", timeStamp(), bb.Channel)
+	bb.conn.Write([]byte("PASS " + bb.Credentials.Password + "\r\n"))
+	bb.conn.Write([]byte("NICK " + bb.Name + "\r\n"))
+	bb.conn.Write([]byte("JOIN #" + bb.Channel + "\r\n"))
+
+	fmt.Printf("[%s] Joined #%s as @%s!\n", timeStamp(), bb.Channel, bb.Name)
+}
+
 func timeStamp() string {
 	return TimeStamp(PSTFormat)
 }
