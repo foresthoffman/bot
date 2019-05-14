@@ -1,5 +1,5 @@
 # exclude binaries
-twitchbot
+bot
 *.json
 
 # confidential

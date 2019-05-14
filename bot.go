@@ -1,18 +1,17 @@
 /**
- * twitchbot.go
+ * bot.go
  *
  * Copyright (c) 2017 Forest Hoffman. All Rights Reserved.
  * License: MIT License (see the included LICENSE file)
  */
 
-package twitchbot
+package bot
 
 import (
 	"bufio"
 	"encoding/json"
 	"errors"
 	"fmt"
-	rgb "github.com/foresthoffman/rgblog"
 	"io"
 	"io/ioutil"
 	"net"
@@ -20,6 +19,8 @@ import (
 	"regexp"
 	"strings"
 	"time"
+
+	rgb "github.com/foresthoffman/rgblog"
 )
 
 const PSTFormat = "Jan 2 15:04:05 PST"
@@ -43,7 +44,7 @@ type OAuthCred struct {
 	Password string `json:"password,omitempty"`
 }
 
-type TwitchBot interface {
+type Bot interface {
 
 	// Opens a connection to the Twitch.tv IRC chat server.
 	Connect()
