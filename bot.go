@@ -39,9 +39,11 @@ var CmdRegex *regexp.Regexp = regexp.MustCompile(`^!(\w+)\s?(\w+)?`)
 
 type OAuthCred struct {
 
-	// The bot account's OAuth password. Thanks to the JSON syntax after the data type, this field
-	// will be filled with the value of the field with the specified key.
+	// The bot account's OAuth password.
 	Password string `json:"password,omitempty"`
+
+	// The developer application client ID. Used for API calls to Twitch.
+	ClientID string `json:"client_id,omitempty"`
 }
 
 type Bot interface {
