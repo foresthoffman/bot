@@ -29,13 +29,13 @@ const PSTFormat = "Jan 2 15:04:05 PST"
 //
 // First matched group is the user's name and the second matched group is the content of the
 // user's message.
-var msgRegex *regexp.Regexp = regexp.MustCompile(`^:(\w+)!\w+@\w+\.tmi\.twitch\.tv (PRIVMSG) #\w+(?: :(.*))?$`)
+var MsgRegex *regexp.Regexp = regexp.MustCompile(`^:(\w+)!\w+@\w+\.tmi\.twitch\.tv (PRIVMSG) #\w+(?: :(.*))?$`)
 
 // Regex for parsing user commands, from already parsed PRIVMSG strings.
 //
 // First matched group is the command name and the second matched group is the argument for the
 // command.
-var cmdRegex *regexp.Regexp = regexp.MustCompile(`^!(\w+)\s?(\w+)?`)
+var CmdRegex *regexp.Regexp = regexp.MustCompile(`^!(\w+)\s?(\w+)?`)
 
 type OAuthCred struct {
 
@@ -157,7 +157,7 @@ func (bb *BasicBot) HandleChat() error {
 		} else {
 
 			// handle a PRIVMSG message
-			matches := msgRegex.FindStringSubmatch(line)
+			matches := MsgRegex.FindStringSubmatch(line)
 			if nil != matches {
 				userName := matches[1]
 				msgType := matches[2]
@@ -168,7 +168,7 @@ func (bb *BasicBot) HandleChat() error {
 					rgb.GPrintf("[%s] %s: %s\n", timeStamp(), userName, msg)
 
 					// parse commands from user message
-					cmdMatches := cmdRegex.FindStringSubmatch(msg)
+					cmdMatches := CmdRegex.FindStringSubmatch(msg)
 					if nil != cmdMatches {
 						cmd := cmdMatches[1]
 
