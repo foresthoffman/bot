@@ -234,7 +234,13 @@ func (bb *BasicBot) Say(msg string) error {
 	if "" == msg {
 		return errors.New("BasicBot.Say: msg was empty.")
 	}
-	_, err := bb.conn.Write([]byte(fmt.Sprintf("PRIVMSG #%s %s\r\n", bb.Channel, msg)))
+
+	// check if message is too large for IRC
+	if len(msg) > 512 {
+		return errors.New("BasicBot.Say: msg exceeded 512 bytes")
+	}
+	
+	_, err := bb.conn.Write([]byte(fmt.Sprintf("PRIVMSG #%s :%s\r\n", bb.Channel, msg)))
 	if nil != err {
 		return err
 	}
