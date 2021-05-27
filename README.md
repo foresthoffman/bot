@@ -1,6 +1,6 @@
 ## Bot
 
-The bot package provides a set of functions that control a basic Twitch.tv chat bot. The package also exposes an interface which can be used to create a custom chat bot.
+The bot package provides a set of functions that control a basic Twitch.tv chat bot. The package also exposes an interface which can be used to create a custom chat bot. See the following series for a step-by-step tutorial on [Building a Twitch.tv Chat Bot](https://dev.to/foresthoffman/building-a-twitchtv-chat-bot-with-go---part-1-i3k) with this package.
 
 ### Installation
 
